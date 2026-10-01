@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lingoflow-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4173
+      DATABASE_URL: postgresql://lingoflow:lingoflow_dev@postgres:5432/lingoflow
+      DATABASE_SSL: "false"
+      DEMO_USER_ID: 11111111-1111-4111-8111-111111111111
+    ports:
+      - "4173:4173"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: lingoflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lingoflow
+      POSTGRES_USER: lingoflow
+      POSTGRES_PASSWORD: lingoflow_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - lingoflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lingoflow -d lingoflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  lingoflow_pgdata:
