@@ -1,5 +1,5 @@
-/* Dữ liệu mẫu cho LingoFlow. Có thể thay thế bằng API/backend sau này. */
-window.APP_DATA = {
+/* Dữ liệu fallback cho Vue khi backend tạm thời không khả dụng. */
+export const appData = {
   vocabulary: [
     { id: 1, word: 'resilient', ipa: '/rɪˈzɪl.i.ənt/', type: 'adjective', meaning: 'kiên cường, có khả năng phục hồi', definition: 'Able to quickly return to a previous good condition after problems.', example: 'Children can be remarkably resilient.', collocations: ['highly resilient', 'resilient community', 'emotionally resilient'], status: 'review' },
     { id: 2, word: 'thrive', ipa: '/θraɪv/', type: 'verb', meaning: 'phát triển mạnh, thịnh vượng', definition: 'To grow, develop, or be successful.', example: 'Some plants thrive in direct sunlight.', collocations: ['thrive on challenges', 'continue to thrive', 'thrive in an environment'], status: 'new' },

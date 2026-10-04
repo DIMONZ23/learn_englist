@@ -8,17 +8,18 @@ import { pool } from './db.js';
 
 const app = express();
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const dist = path.join(root, 'dist');
 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy:false, crossOriginEmbedderPolicy:false }));
 app.use(express.json({ limit:'64kb' }));
 app.use('/api', apiRouter);
 
-const publicFiles = new Map([
-  ['/styles.css','styles.css'], ['/data.js','data.js'], ['/api-client.js','api-client.js'], ['/app.js','app.js']
-]);
-for (const [route,file] of publicFiles) app.get(route, (_req,res)=>res.sendFile(path.join(root,file)));
-app.get('/', (_req,res)=>res.sendFile(path.join(root,'index.html')));
+app.use(express.static(dist, { index: false, maxAge: config.nodeEnv === 'production' ? '1d' : 0 }));
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api') && req.accepts('html')) return res.sendFile(path.join(dist, 'index.html'));
+  next();
+});
 app.use((_req,res)=>res.status(404).json({error:{message:'Không tìm thấy tài nguyên.'}}));
 app.use((error,_req,res,_next)=>{
   const status=error.status||error.statusCode||500;

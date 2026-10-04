@@ -1,15 +1,6 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
 import { pool, withTransaction } from '../server/db.js';
 import { config } from '../server/config.js';
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const source = await fs.readFile(path.join(root,'data.js'),'utf8');
-const sandbox = { window:{} };
-vm.runInNewContext(source,sandbox,{filename:'data.js'});
-const data = sandbox.window.APP_DATA;
+import { appData as data } from '../src/data.js';
 
 try {
   await withTransaction(async client => {

@@ -4,15 +4,18 @@
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "type": "module",
-  "description": "Ứng dụng học tiếng Anh full-stack với Express và PostgreSQL",
+  "description": "Ứng dụng học tiếng Anh Vue 3 full-stack với Express và PostgreSQL",
   "scripts": {
-    "dev": "node --watch server/index.js",
+    "dev": "concurrently -k \"pnpm dev:server\" \"pnpm dev:web\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:web": "vite",
+    "build": "vite build",
     "start": "node server/index.js",
     "docker:start": "node scripts/migrate.js && node scripts/seed.js && node server/index.js",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
     "db:setup": "pnpm db:migrate && pnpm db:seed",
-    "check": "node --check server/index.js && node --check server/routes.js && node --check app.js && node --check api-client.js"
+    "check": "node --check server/index.js && node --check server/routes.js && vite build"
   },
   "engines": {
     "node": ">=20"
@@ -21,6 +24,12 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "vite": "^7.1.9"
   }
 }

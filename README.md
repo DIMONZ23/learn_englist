@@ -1,6 +1,6 @@
 # 🇬🇧 AI English Master - Ứng Dụng Học & Luyện Tập Tiếng Anh Thông Minh
 
-Ứng dụng học tiếng Anh full-stack: frontend **HTML5/CSS3/Vanilla JavaScript**, REST API **Node.js/Express** và cơ sở dữ liệu **PostgreSQL**. Toàn bộ tiến độ, từ vựng, lần làm bài và lịch sử hỏi gia sư được lưu bền vững ở server.
+Ứng dụng học tiếng Anh full-stack: frontend **Vue 3 + Vite**, REST API **Node.js/Express** và cơ sở dữ liệu **PostgreSQL**. Toàn bộ tiến độ, từ vựng, lần làm bài và lịch sử hỏi gia sư được lưu bền vững ở server.
 
 ## 🚀 Chạy toàn bộ hệ thống
 
@@ -29,11 +29,11 @@ pnpm db:setup
 pnpm dev
 ```
 
-Mở `http://localhost:4173`. Thanh trạng thái dưới sidebar sẽ hiển thị **PostgreSQL đã đồng bộ** khi kết nối thành công.
+Với Docker, mở `http://localhost:4173`. Khi chạy `pnpm dev`, frontend Vite ở `http://localhost:5173` và tự proxy API sang backend cổng `4173`. Thanh trạng thái dưới sidebar sẽ hiển thị **PostgreSQL đã đồng bộ** khi kết nối thành công.
 
 PostgreSQL trong Docker được map ra cổng `5433` để không xung đột với PostgreSQL cài trực tiếp trên Windows tại cổng `5432`.
 
-> Có thể mở trực tiếp `index.html` để xem chế độ demo offline. Ở chế độ này dữ liệu nghiệp vụ không được ghi vào PostgreSQL.
+> Frontend cần được chạy qua Vite hoặc Docker; không mở trực tiếp `index.html` bằng giao thức `file://`.
 
 ---
 
@@ -47,7 +47,7 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 ### 2. 📖 Tab 2: Sổ Tay Từ Vựng Thông Minh (Vocabulary Hub)
 - **Flashcard 3D:** Lật thẻ tương tác kèm phát âm Audio (sử dụng Web Speech API), phiên âm quốc tế IPA, ví dụ thực tế.
 - **AI Từ Điển Cambridge:** Nhập từ mới để AI tự động trích xuất định nghĩa chuẩn phong cách Cambridge Learner's Dictionary, cụm từ đi kèm (Collocations), và họ từ (Word family).
-- **Lưu trữ từ vựng:** Phân loại theo trạng thái (Đã nhớ / Cần ôn / Từ mới) và tự động đồng bộ vào trình duyệt.
+- **Lưu trữ từ vựng:** Phân loại theo trạng thái (Đã nhớ / Cần ôn / Từ mới) và tự động đồng bộ vào PostgreSQL.
 
 ### 3. 🧩 Tab 3: Ngữ Pháp & Cấu Trúc Toàn Diện (Grammar Master)
 - **Hệ thống chuyên đề:**
@@ -78,12 +78,12 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 
 ## 🛠️ Công Nghệ Sử Dụng
 
-- **Frontend:** HTML5, Modern CSS3 (Flexbox, CSS Grid, Custom Variables), Vanilla JavaScript (ES6+).
+- **Frontend:** Vue 3 Composition API, Single File Components, Vite và Modern CSS3.
 - **Backend:** Node.js, Express 5, REST API, validation và transaction.
 - **Cơ sở dữ liệu:** PostgreSQL với index, foreign key, JSONB và migration SQL.
 - **Lưu trữ trình duyệt:** `localStorage` chỉ giữ theme và trạng thái UI; PostgreSQL là nguồn dữ liệu chính.
 - **Audio & Giọng đọc:** Web Speech Synthesis API (hoạt động không cần thư viện ngoài).
-- **Icons:** Lucide Icons / Font Awesome CDN.
+- **Build:** Vite tạo bundle production; Express phục vụ thư mục `dist`.
 - **AI Engine:** Tích hợp mô phỏng AI (Mock AI Engine) có thể chuyển đổi dễ dàng sang API của Google Gemini hoặc OpenAI.
 
 ---
@@ -92,8 +92,14 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 
 ```text
 learn_englist/
-├── index.html, styles.css, app.js, data.js
-├── api-client.js              # REST client và xử lý lỗi mạng
+├── index.html                 # Vite entry HTML
+├── vite.config.js             # Vite + proxy API khi phát triển
+├── src/
+│   ├── App.vue                # App shell và điều hướng SPA
+│   ├── main.js, store.js      # Vue bootstrap + reactive store
+│   ├── api.js, data.js        # REST client + dữ liệu fallback/seed
+│   ├── styles.css             # Design system responsive
+│   └── components/            # Dashboard, Vocabulary, Grammar, Practice
 ├── server/
 │   ├── index.js               # Express server + static frontend
 │   ├── routes.js              # Toàn bộ REST API
@@ -101,8 +107,9 @@ learn_englist/
 │   └── validation.js          # Kiểm tra dữ liệu đầu vào
 ├── db/schema.sql              # Schema và indexes
 ├── scripts/migrate.js         # Tạo/cập nhật schema
-├── scripts/seed.js            # Nạp dữ liệu mẫu từ data.js
-├── docker-compose.yml         # PostgreSQL local
+├── scripts/seed.js            # Nạp dữ liệu mẫu từ src/data.js
+├── Dockerfile                 # Multi-stage build Vue + Node runtime
+├── docker-compose.yml         # App + PostgreSQL
 ├── .env.example               # Biến môi trường mẫu
 └── package.json
 ```
