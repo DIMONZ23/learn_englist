@@ -17,7 +17,25 @@ CREATE TABLE IF NOT EXISTS user_stats (
   correct_count INTEGER NOT NULL DEFAULT 0 CHECK (correct_count >= 0),
   answer_count INTEGER NOT NULL DEFAULT 0 CHECK (answer_count >= 0),
   weekly_goal_percent INTEGER NOT NULL DEFAULT 0 CHECK (weekly_goal_percent BETWEEN 0 AND 100),
+  weekly_change_percent INTEGER NOT NULL DEFAULT 0,
+  daily_goal_minutes INTEGER NOT NULL DEFAULT 25 CHECK (daily_goal_minutes > 0),
+  best_score NUMERIC(4,1) NOT NULL DEFAULT 0 CHECK (best_score BETWEEN 0 AND 10),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS daily_goal_minutes INTEGER NOT NULL DEFAULT 25 CHECK (daily_goal_minutes > 0);
+ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS best_score NUMERIC(4,1) NOT NULL DEFAULT 0 CHECK (best_score BETWEEN 0 AND 10);
+ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS weekly_change_percent INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS daily_reviews (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(160) NOT NULL,
+  subtitle VARCHAR(240) NOT NULL,
+  badge VARCHAR(80) NOT NULL,
+  icon VARCHAR(16) NOT NULL DEFAULT 'A',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, sort_order)
 );
 
 CREATE TABLE IF NOT EXISTS vocabulary (
@@ -37,6 +55,19 @@ CREATE TABLE IF NOT EXISTS vocabulary (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS vocabulary_user_word_unique ON vocabulary(user_id, LOWER(word));
 CREATE INDEX IF NOT EXISTS vocabulary_review_queue_idx ON vocabulary(user_id, status, next_review_at);
+
+CREATE TABLE IF NOT EXISTS dictionary_entries (
+  word VARCHAR(80) PRIMARY KEY,
+  ipa VARCHAR(120) NOT NULL DEFAULT '',
+  word_type VARCHAR(40) NOT NULL DEFAULT 'word',
+  meaning TEXT NOT NULL,
+  definition TEXT NOT NULL DEFAULT '',
+  example TEXT NOT NULL DEFAULT '',
+  collocations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  source VARCHAR(40) NOT NULL DEFAULT 'seed',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 CREATE TABLE IF NOT EXISTS grammar_lessons (
   lesson_key VARCHAR(80) PRIMARY KEY,

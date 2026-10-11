@@ -1,5 +1,4 @@
 import { computed, reactive, watch } from 'vue';
-import { appData } from './data.js';
 import { api } from './api.js';
 
 const STORAGE_KEY = 'lingoflow-vue-state-v2';
@@ -16,10 +15,11 @@ function savedPreferences() {
 export const state = reactive({
   ...savedPreferences(),
   profile: { name: 'Minh Nguyễn', level: 'B1' },
-  stats: { streak: 12, learned: 184, exercises: 36, accuracy: 87, weeklyGoal: 68 },
-  vocabulary: structuredClone(appData.vocabulary),
-  grammar: structuredClone(appData.grammar),
-  practice: structuredClone(appData.practice),
+  stats: { streak: 0, learned: 0, exercises: 0, accuracy: 0, weeklyGoal: 0, weeklyChange:0 },
+  dashboard: { todayGoal: { completed:0, target:0, percent:0 }, bestScore:0, reviews:[], weekActivity:[] },
+  vocabulary: [],
+  grammar: [],
+  practice: {},
   online: false,
   syncing: true,
   mobileNavOpen: false,
@@ -59,6 +59,7 @@ export async function bootstrap() {
     state.profile = payload.profile;
     state.stats = payload.stats;
     state.vocabulary = payload.vocabulary;
+    state.dashboard = payload.dashboard;
     if (payload.grammar?.length) state.grammar = payload.grammar;
     if (payload.practice && Object.keys(payload.practice).length) state.practice = payload.practice;
     if (!state.practice[state.practiceTopic]) state.practiceTopic = Object.keys(state.practice)[0];
@@ -75,5 +76,5 @@ export async function reloadData() {
   localStorage.removeItem(STORAGE_KEY);
   await bootstrap();
   navigate('dashboard');
-  showToast(state.online ? 'Đã tải lại dữ liệu từ PostgreSQL.' : 'Đang dùng dữ liệu demo offline.');
+  showToast(state.online ? 'Đã tải lại dữ liệu từ PostgreSQL.' : 'Không thể kết nối PostgreSQL.');
 }

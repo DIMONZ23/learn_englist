@@ -18,7 +18,7 @@ const items = [
         <em v-if="item.id === 'vocabulary'">{{ reviewCount }}</em>
       </button>
     </nav>
-    <div class="sidebar-goal"><div class="goal-icon">⚡</div><div><span>Mục tiêu hôm nay</span><strong>18 / 25 phút</strong></div><div class="goal-bar"><i style="width:72%"></i></div></div>
+    <div class="sidebar-goal"><div class="goal-icon">⚡</div><div><span>Mục tiêu hôm nay</span><strong>{{ state.dashboard.todayGoal.completed }} / {{ state.dashboard.todayGoal.target }} phút</strong></div><div class="goal-bar"><i :style="{ width: `${state.dashboard.todayGoal.percent}%` }"></i></div></div>
     <div class="sidebar-footer">
       <button @click="reloadData">↻ <span>Tải lại dữ liệu</span></button>
       <small :class="state.online ? 'online' : 'offline'">{{ state.syncing ? 'Đang kết nối máy chủ…' : state.online ? '● PostgreSQL đã đồng bộ' : '● Chế độ offline' }}</small>

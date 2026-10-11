@@ -41,6 +41,7 @@ async function answer(index) {
     if (response.correct) { correctCount.value += 1; showToast('Chính xác! Tuyệt vời 🎉'); }
     else showToast('Chưa đúng — xem giải thích bên dưới nhé.');
     if (response.stats) state.stats = response.stats;
+    if (response.dashboard) state.dashboard = response.dashboard;
     else state.stats.exercises += 1;
   } catch (error) {
     selectedIndex.value = null;
@@ -89,7 +90,7 @@ async function sendMessage() {
 
 <template>
   <section class="view active">
-    <div class="practice-hero card"><div><span class="pill pill-cyan">Practice Lab</span><h2>Luyện đúng điểm yếu,<br>tiến bộ đúng trọng tâm.</h2><p>Chọn chủ đề, làm bài và nhận giải thích chi tiết ngay lập tức.</p></div><div class="score-orbit"><span>🏆</span><strong>8.6</strong><small>điểm cao nhất</small></div></div>
+    <div class="practice-hero card"><div><span class="pill pill-cyan">Practice Lab</span><h2>Luyện đúng điểm yếu,<br>tiến bộ đúng trọng tâm.</h2><p>Chọn chủ đề, làm bài và nhận giải thích chi tiết ngay lập tức.</p></div><div class="score-orbit"><span>🏆</span><strong>{{ state.dashboard.bestScore }}</strong><small>điểm cao nhất</small></div></div>
     <div class="topic-chips"><button v-for="topic in topics" :key="topic" class="topic-chip" :class="{ active: topic === state.practiceTopic }" @click="chooseTopic(topic)">{{ topic }}</button></div>
     <div class="practice-layout">
       <article class="card quiz-panel">

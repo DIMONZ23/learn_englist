@@ -1,5 +1,5 @@
-/* Dữ liệu fallback cho Vue khi backend tạm thời không khả dụng. */
-export const appData = {
+/* Dữ liệu khởi tạo PostgreSQL. Frontend không import file này. */
+export const seedData = {
   vocabulary: [
     { id: 1, word: 'resilient', ipa: '/rɪˈzɪl.i.ənt/', type: 'adjective', meaning: 'kiên cường, có khả năng phục hồi', definition: 'Able to quickly return to a previous good condition after problems.', example: 'Children can be remarkably resilient.', collocations: ['highly resilient', 'resilient community', 'emotionally resilient'], status: 'review' },
     { id: 2, word: 'thrive', ipa: '/θraɪv/', type: 'verb', meaning: 'phát triển mạnh, thịnh vượng', definition: 'To grow, develop, or be successful.', example: 'Some plants thrive in direct sunlight.', collocations: ['thrive on challenges', 'continue to thrive', 'thrive in an environment'], status: 'new' },
@@ -14,6 +14,11 @@ export const appData = {
     sustainable: { word: 'sustainable', ipa: '/səˈsteɪ.nə.bəl/', type: 'adjective', meaning: 'bền vững', definition: 'Able to continue over a period of time without harming the environment.', example: 'We need a more sustainable approach to growth.', collocations: ['sustainable development', 'environmentally sustainable', 'sustainable growth'] },
     enhance: { word: 'enhance', ipa: '/ɪnˈhɑːns/', type: 'verb', meaning: 'nâng cao, cải thiện', definition: 'To improve the quality, amount, or strength of something.', example: 'Good lighting can enhance the atmosphere.', collocations: ['greatly enhance', 'enhance performance', 'enhance understanding'] }
   },
+  dailyReviews: [
+    { title:'at / on / in', subtitle:'Giới từ chỉ thời gian', badge:'Sai 3 lần', icon:'@' },
+    { title:'resilient', subtitle:'Từ vựng học thuật', badge:'Đến hạn ôn', icon:'A' },
+    { title:'Present Perfect', subtitle:'Phân biệt với Past Simple', badge:'72% chính xác', icon:'A' }
+  ],
   grammar: [
     {
       category: 'Các thì', icon: '◷', lessons: [

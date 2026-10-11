@@ -7,14 +7,19 @@ const stats = computed(() => [
   ['A', state.stats.learned, 'Từ đã ghi nhớ'],
   ['✓', state.stats.exercises, 'Bài đã hoàn thành'],
   ['◎', `${state.stats.accuracy}%`, 'Tỷ lệ chính xác'],
-  ['↗', '+14%', 'So với tuần trước']
+  ['↗', `${state.stats.weeklyChange >= 0 ? '+' : ''}${state.stats.weeklyChange}%`, 'So với tuần trước']
 ]);
-const reviews = [
-  ['at / on / in', 'Giới từ chỉ thời gian', 'Sai 3 lần'],
-  ['resilient', 'Từ vựng học thuật', 'Đến hạn ôn'],
-  ['Present Perfect', 'Phân biệt với Past Simple', '72% chính xác']
-];
-
+const weakness = computed(() => state.dashboard.reviews[0]?.subtitle || 'các nội dung đến hạn ôn');
+const weekDays = computed(() => {
+  const activity = new Map(state.dashboard.weekActivity.map((item) => [item.date, item]));
+  return Array.from({ length:7 }, (_, index) => {
+    const date = new Date();
+    date.setHours(12,0,0,0);
+    date.setDate(date.getDate() - 6 + index);
+    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    return { key, label:['CN','T2','T3','T4','T5','T6','T7'][date.getDay()], done:activity.has(key), today:index===6 };
+  });
+});
 function reviewNow() {
   const index = state.vocabulary.findIndex((word) => word.status === 'review');
   state.cardIndex = Math.max(0, index);
@@ -36,7 +41,7 @@ function reviewNow() {
       </article>
       <article class="card streak-card">
         <div class="card-heading"><div><span class="section-kicker">Chuỗi học</span><h3>{{ state.stats.streak }} ngày liên tiếp</h3></div><div class="fire">🔥</div></div>
-        <div class="week-row"><div v-for="(day, index) in ['T2','T3','T4','T5','T6','T7','CN']" :key="day" class="day" :class="{ done: index < 5, today: index === 4 }"><i>{{ index < 5 ? '✓' : index + 1 }}</i><span>{{ day }}</span></div></div>
+        <div class="week-row"><div v-for="day in weekDays" :key="day.key" class="day" :class="{ done: day.done, today: day.today }"><i>{{ day.done ? '✓' : '·' }}</i><span>{{ day.label }}</span></div></div>
         <p class="muted compact">Học thêm hôm nay để giữ chuỗi tuyệt vời này.</p>
       </article>
     </div>
@@ -44,8 +49,8 @@ function reviewNow() {
     <div class="dashboard-lower">
       <article class="card digest-card">
         <div class="card-heading"><div><span class="ai-badge">✦ AI Daily Review</span><h2>Nội dung nên ôn hôm nay</h2></div><span class="updated">Vừa cập nhật</span></div>
-        <p>Dựa trên kết quả 7 ngày gần nhất, bạn đang nhầm nhiều ở <strong>giới từ chỉ thời gian</strong> và nhóm từ học thuật dưới đây.</p>
-        <div class="review-list"><div v-for="(review, index) in reviews" :key="review[0]" class="review-item"><span class="review-icon">{{ index ? 'A' : '@' }}</span><div><strong>{{ review[0] }}</strong><small>{{ review[1] }}</small></div><em>{{ review[2] }}</em></div></div>
+        <p>Dựa trên kết quả 7 ngày gần nhất, bạn nên tập trung vào <strong>{{ weakness }}</strong> và các nội dung dưới đây.</p>
+        <div class="review-list"><div v-for="review in state.dashboard.reviews" :key="review.title" class="review-item"><span class="review-icon">{{ review.icon }}</span><div><strong>{{ review.title }}</strong><small>{{ review.subtitle }}</small></div><em>{{ review.badge }}</em></div></div>
         <div class="action-row"><button class="btn btn-primary" @click="reviewNow">Ôn tập ngay · 8 phút</button><button class="btn btn-ghost" @click="navigate('grammar')">Xem lý thuyết</button></div>
       </article>
       <article class="card quick-card"><span class="section-kicker">Hành động nhanh</span><h2>Bạn có 5 phút?</h2><p class="muted">Một bài kiểm tra ngắn giúp kiến thức ở lại lâu hơn.</p><div class="quick-visual"><span>5</span><small>phút</small></div><button class="btn btn-dark full" @click="navigate('practice')">Bắt đầu kiểm tra nhanh</button></article>

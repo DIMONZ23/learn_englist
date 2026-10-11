@@ -1,7 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { api } from '../api.js';
-import { appData } from '../data.js';
 import { showToast, state } from '../store.js';
 
 const filter = ref('all');
@@ -51,11 +50,8 @@ async function searchDictionary() {
   lookupState.value = 'loading';
   lookupError.value = '';
   try {
-    lookup.value = state.online ? (await api.lookup(term)).entry : (appData.dictionary[term] || {
-      word: term, ipa: '/ˈwɜːd/', type: 'word', meaning: 'Từ mới do người học thêm',
-      definition: `A useful English word. Connect a real dictionary API to retrieve the full entry for “${term}”.`,
-      example: `I am learning how to use “${term}” in context.`, collocations: [`use ${term}`, `learn ${term}`, `understand ${term}`]
-    });
+    if (!state.online) throw new Error('Cần kết nối PostgreSQL để tra và lưu từ.');
+    lookup.value = (await api.lookup(term)).entry;
     lookupState.value = 'ready';
   } catch (error) {
     lookupError.value = error.message;

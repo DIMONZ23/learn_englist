@@ -26,7 +26,6 @@ COPY --chown=node:node package.json ./
 COPY --chown=node:node server ./server
 COPY --chown=node:node scripts ./scripts
 COPY --chown=node:node db ./db
-COPY --chown=node:node src/data.js ./src/data.js
 USER node
 EXPOSE 4173
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \

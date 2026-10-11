@@ -20,7 +20,8 @@ async function getStats(db, userId) {
             COALESCE(s.exercises_count, 0) AS exercises_count,
             COALESCE(s.correct_count, 0) AS correct_count,
             COALESCE(s.answer_count, 0) AS answer_count,
-            COALESCE(s.weekly_goal_percent, 0) AS weekly_goal_percent
+            COALESCE(s.weekly_goal_percent, 0) AS weekly_goal_percent,
+            COALESCE(s.weekly_change_percent, 0) AS weekly_change_percent
        FROM users u LEFT JOIN user_stats s ON s.user_id = u.id
       WHERE u.id = $1`, [userId]
   );
@@ -31,7 +32,37 @@ async function getStats(db, userId) {
     learned: r.learned_count,
     exercises: r.exercises_count,
     accuracy: r.answer_count ? Math.round((r.correct_count / r.answer_count) * 100) : 0,
-    weeklyGoal: r.weekly_goal_percent
+    weeklyGoal: r.weekly_goal_percent,
+    weeklyChange: r.weekly_change_percent
+  };
+}
+
+async function getDashboard(db, userId) {
+  const [summaryResult, reviewResult, activityResult] = await Promise.all([
+    db.query(
+      `SELECT s.daily_goal_minutes, s.best_score, COALESCE(a.minutes,0) AS completed_minutes
+         FROM user_stats s
+         LEFT JOIN study_activity a ON a.user_id=s.user_id AND a.activity_date=CURRENT_DATE
+        WHERE s.user_id=$1`, [userId]
+    ),
+    db.query(
+      `SELECT title,subtitle,badge,icon FROM daily_reviews
+        WHERE user_id=$1 ORDER BY sort_order,id`, [userId]
+    ),
+    db.query(
+      `SELECT activity_date::text AS date,minutes,completed_items FROM study_activity
+        WHERE user_id=$1 AND activity_date BETWEEN CURRENT_DATE-6 AND CURRENT_DATE
+        ORDER BY activity_date`, [userId]
+    )
+  ]);
+  const summary = summaryResult.rows[0] || { daily_goal_minutes:25, best_score:0, completed_minutes:0 };
+  const target = Number(summary.daily_goal_minutes);
+  const completed = Number(summary.completed_minutes);
+  return {
+    todayGoal: { completed, target, percent: Math.min(100, Math.round((completed / target) * 100)) },
+    bestScore: Number(summary.best_score),
+    reviews: reviewResult.rows,
+    weekActivity: activityResult.rows.map(row => ({ date:row.date, minutes:Number(row.minutes), completedItems:Number(row.completed_items) }))
   };
 }
 
@@ -61,15 +92,15 @@ apiRouter.get('/health', async (_req, res) => {
 
 apiRouter.get('/bootstrap', async (req, res) => {
   const userId = currentUserId(req);
-  const [userResult, vocabResult, stats, grammar, practice] = await Promise.all([
+  const [userResult, vocabResult, stats, grammar, practice, dashboard] = await Promise.all([
     pool.query('SELECT id, name, level, streak_count FROM users WHERE id = $1', [userId]),
     pool.query('SELECT * FROM vocabulary WHERE user_id = $1 ORDER BY created_at DESC, id DESC', [userId]),
-    getStats(pool, userId), getGrammar(), getPractice()
+    getStats(pool, userId), getGrammar(), getPractice(), getDashboard(pool, userId)
   ]);
   if (!userResult.rows[0]) throw new HttpError(404, 'Không tìm thấy tài khoản demo. Hãy chạy pnpm db:seed.');
   res.json({
     profile: userResult.rows[0], stats,
-    vocabulary: vocabResult.rows.map(mapVocabulary), grammar, practice
+    vocabulary: vocabResult.rows.map(mapVocabulary), grammar, practice, dashboard
   });
 });
 
@@ -162,22 +193,35 @@ apiRouter.post('/practice/attempts', async (req, res) => {
          WHEN last_study_date=CURRENT_DATE-1 THEN streak_count+1 ELSE 1 END,
        last_study_date=CURRENT_DATE,updated_at=NOW() WHERE id=$1`, [userId]
     );
-    return { correct:isCorrect, correctIndex:q.correct_index, explanation:q.explanation, traps:q.traps, stats:await getStats(client,userId) };
+    return {
+      correct:isCorrect, correctIndex:q.correct_index, explanation:q.explanation, traps:q.traps,
+      stats:await getStats(client,userId), dashboard:await getDashboard(client,userId)
+    };
   });
   res.status(201).json(payload);
 });
 
-const dictionary = {
-  resilient:{word:'resilient',ipa:'/rɪˈzɪl.i.ənt/',type:'adjective',meaning:'kiên cường, có khả năng phục hồi',definition:'Able to quickly return to a previous good condition after problems.',example:'The local economy proved remarkably resilient.',collocations:['highly resilient','resilient community','emotionally resilient']},
-  thrive:{word:'thrive',ipa:'/θraɪv/',type:'verb',meaning:'phát triển mạnh, thịnh vượng',definition:'To grow, develop, or be successful.',example:'Creative people thrive in supportive teams.',collocations:['thrive on challenges','continue to thrive','thrive in']},
-  sustainable:{word:'sustainable',ipa:'/səˈsteɪ.nə.bəl/',type:'adjective',meaning:'bền vững',definition:'Able to continue over time without harming the environment.',example:'We need a more sustainable approach to growth.',collocations:['sustainable development','environmentally sustainable','sustainable growth']},
-  enhance:{word:'enhance',ipa:'/ɪnˈhɑːns/',type:'verb',meaning:'nâng cao, cải thiện',definition:'To improve the quality, amount, or strength of something.',example:'Good lighting can enhance the atmosphere.',collocations:['greatly enhance','enhance performance','enhance understanding']}
-};
-
 apiRouter.post('/dictionary', async (req, res) => {
   const term = cleanText(req.body?.term, 'term', 40).toLowerCase();
   if (!/^[a-z][a-z '\-]{0,39}$/.test(term)) throw new HttpError(400, 'Từ cần tra không hợp lệ.');
-  res.json({ entry: dictionary[term] || { word:term, ipa:'/ˈwɜːd/', type:'word', meaning:'Từ mới do người học thêm', definition:`A useful English word. Connect a dictionary provider to enrich “${term}”.`, example:`I am learning how to use “${term}” in context.`, collocations:[`use ${term}`,`learn ${term}`,`understand ${term}`] } });
+  let { rows } = await pool.query(
+    'SELECT word,ipa,word_type AS type,meaning,definition,example,collocations FROM dictionary_entries WHERE word=$1', [term]
+  );
+  if (!rows[0]) {
+    const generated = {
+      word:term, ipa:'/ˈwɜːd/', type:'word', meaning:'Từ mới do người học thêm',
+      definition:`A useful English word. Connect a dictionary provider to enrich “${term}”.`,
+      example:`I am learning how to use “${term}” in context.`, collocations:[`use ${term}`,`learn ${term}`,`understand ${term}`]
+    };
+    ({ rows } = await pool.query(
+      `INSERT INTO dictionary_entries(word,ipa,word_type,meaning,definition,example,collocations,source)
+       VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'generated')
+       ON CONFLICT(word) DO UPDATE SET updated_at=NOW()
+       RETURNING word,ipa,word_type AS type,meaning,definition,example,collocations`,
+      [generated.word,generated.ipa,generated.type,generated.meaning,generated.definition,generated.example,JSON.stringify(generated.collocations)]
+    ));
+  }
+  res.json({ entry: rows[0] });
 });
 
 apiRouter.post('/tutor', async (req, res) => {

@@ -51,10 +51,12 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 
 ### 3. 🧩 Tab 3: Ngữ Pháp & Cấu Trúc Toàn Diện (Grammar Master)
 - **Hệ thống chuyên đề:**
-  - 12 Thì tiếng Anh thông dụng (Tenses).
-  - Từ loại (Danh từ, Động từ, Tính từ, Trạng từ, Giới từ,...).
-  - Trật tự từ trong câu và cấu tạo các loại câu (Đơn, Ghép, Phức).
-  - Mệnh đề quan hệ, mệnh đề trạng ngữ, mệnh đề danh từ.
+  - 46 bài học từ Beginner đến Advanced/TOEIC, lưu hoàn toàn trong PostgreSQL.
+  - Đủ 12 thì và các cách diễn đạt tương lai thường gặp.
+  - 12 nhóm từ loại: danh từ, đại từ, động từ, tính từ, trạng từ, giới từ, liên từ, thán từ, từ hạn định, số từ, từ để hỏi và tiểu từ/họ từ.
+  - Cấu trúc câu, danh từ–mạo từ–hạn định, mẫu động từ, so sánh, giới từ–liên từ, các loại mệnh đề, câu điều kiện và câu tường thuật.
+- **Cấu trúc bài học thống nhất:** định nghĩa, vai trò, công thức, vị trí, dấu hiệu nhận biết, quy tắc, ngoại lệ, ví dụ dịch, đúng/sai, lỗi người Việt, phân biệt dễ nhầm, bài tập có giải thích và phần tóm tắt/mẹo nhớ.
+- **Tìm kiếm nhanh:** Lọc tức thì theo tên bài, cấp độ hoặc nhóm kiến thức.
 - **Phương pháp trực quan:** Sơ đồ công thức bằng màu sắc, chỉ ra các lỗi sai kinh điển (Common Mistakes).
 - **AI Mnemonics:** Mẹo và câu thần chú ghi nhớ nhanh công thức.
 - **Mini Quiz:** Bài tập thực hành 3-5 câu trắc nghiệm nhanh ngay sau mỗi lý thuyết.
@@ -80,7 +82,7 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 
 - **Frontend:** Vue 3 Composition API, Single File Components, Vite và Modern CSS3.
 - **Backend:** Node.js, Express 5, REST API, validation và transaction.
-- **Cơ sở dữ liệu:** PostgreSQL với index, foreign key, JSONB và migration SQL.
+- **Cơ sở dữ liệu:** PostgreSQL là nguồn dữ liệu duy nhất cho profile, thống kê, mục tiêu, Daily Review, từ điển, từ vựng, ngữ pháp, bài tập và lịch sử gia sư.
 - **Lưu trữ trình duyệt:** `localStorage` chỉ giữ theme và trạng thái UI; PostgreSQL là nguồn dữ liệu chính.
 - **Audio & Giọng đọc:** Web Speech Synthesis API (hoạt động không cần thư viện ngoài).
 - **Build:** Vite tạo bundle production; Express phục vụ thư mục `dist`.
@@ -97,7 +99,7 @@ learn_englist/
 ├── src/
 │   ├── App.vue                # App shell và điều hướng SPA
 │   ├── main.js, store.js      # Vue bootstrap + reactive store
-│   ├── api.js, data.js        # REST client + dữ liệu fallback/seed
+│   ├── api.js, store.js       # REST client + reactive state từ API
 │   ├── styles.css             # Design system responsive
 │   └── components/            # Dashboard, Vocabulary, Grammar, Practice
 ├── server/
@@ -105,9 +107,11 @@ learn_englist/
 │   ├── routes.js              # Toàn bộ REST API
 │   ├── db.js                  # PostgreSQL pool + transaction
 │   └── validation.js          # Kiểm tra dữ liệu đầu vào
-├── db/schema.sql              # Schema và indexes
+├── db/schema.sql              # Schema, indexes và bảng dữ liệu nghiệp vụ
+├── db/seed-data.js            # Từ vựng, bài tập và dữ liệu khởi tạo
+├── db/curriculum/             # 46 bài từ loại/ngữ pháp theo cấu trúc 13 phần
 ├── scripts/migrate.js         # Tạo/cập nhật schema
-├── scripts/seed.js            # Nạp dữ liệu mẫu từ src/data.js
+├── scripts/seed.js            # Nạp dữ liệu khởi tạo vào PostgreSQL
 ├── Dockerfile                 # Multi-stage build Vue + Node runtime
 ├── docker-compose.yml         # App + PostgreSQL
 ├── .env.example               # Biến môi trường mẫu

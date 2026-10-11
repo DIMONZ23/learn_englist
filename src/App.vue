@@ -8,12 +8,14 @@ import VocabularyView from './components/VocabularyView.vue';
 import { bootstrap, initials, state } from './store.js';
 
 const pageMeta = {
-  dashboard: ['Tổng quan hôm nay', 'Chào buổi sáng, Minh!'],
+  dashboard: ['Tổng quan hôm nay', 'Chào buổi sáng!'],
   vocabulary: ['Học từ vựng thông minh', 'Xây vốn từ vững chắc'],
   grammar: ['Ngữ pháp trực quan', 'Hiểu bản chất, nhớ thật lâu'],
   practice: ['Luyện tập cá nhân hóa', 'Thử thách kiến thức của bạn']
 };
-const currentMeta = computed(() => pageMeta[state.activeView] || pageMeta.dashboard);
+const currentMeta = computed(() => state.activeView === 'dashboard'
+  ? ['Tổng quan hôm nay', `Chào buổi sáng, ${state.profile.name}!`]
+  : (pageMeta[state.activeView] || pageMeta.dashboard));
 
 onMounted(bootstrap);
 </script>
