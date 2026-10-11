@@ -2,7 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import { api } from '../api.js';
 import { showToast, state } from '../store.js';
+import ToeicVocabulary from './ToeicVocabulary.vue';
 
+const vocabMode = ref('notebook');
 const filter = ref('all');
 const flipped = ref(false);
 const query = ref('');
@@ -80,6 +82,9 @@ async function removeWord(id) {
 
 <template>
   <section class="view active">
+    <div class="practice-mode-switch"><button :class="{active:vocabMode==='notebook'}" @click="vocabMode='notebook'">📖 Sổ tay cá nhân</button><button :class="{active:vocabMode==='toeic'}" @click="vocabMode='toeic'">🎯 3.000 từ TOEIC</button></div>
+    <ToeicVocabulary v-if="vocabMode==='toeic'" @back="vocabMode='notebook'" />
+    <div v-else>
     <div class="section-intro"><div><span class="pill pill-indigo">Vocabulary Builder</span><h2>Học từ mới theo cách bộ não ghi nhớ</h2><p>Lật thẻ, nghe phát âm và tự đánh giá để hệ thống lên lịch ôn phù hợp.</p></div><div class="session-count"><strong>{{ state.vocabulary.length }}</strong><span>từ trong sổ</span></div></div>
     <div class="vocab-layout">
       <article class="flashcard-wrap">
@@ -116,5 +121,6 @@ async function removeWord(id) {
       <div class="notebook-head"><div><span class="section-kicker">Sổ tay của tôi</span><h2>Từ vựng đã lưu</h2></div><div class="filter-group"><button v-for="item in [['all','Tất cả'],['known','Đã thuộc'],['review','Cần ôn'],['new','Chưa học']]" :key="item[0]" class="filter" :class="{ active: filter === item[0] }" @click="filter = item[0]">{{ item[1] }}</button></div></div>
       <div class="table-wrap"><table><thead><tr><th>Từ vựng</th><th>Loại từ</th><th>Nghĩa</th><th>Trạng thái</th><th></th></tr></thead><tbody><tr v-for="word in filteredWords" :key="word.id"><td><span class="word-cell"><strong>{{ word.word }}</strong><small>{{ word.ipa }}</small></span></td><td>{{ word.type }}</td><td>{{ word.meaning }}</td><td><span class="status" :class="`status-${word.status}`">{{ statusMap[word.status] }}</span></td><td><button class="delete-word" :aria-label="`Xóa ${word.word}`" @click="removeWord(word.id)">×</button></td></tr><tr v-if="!filteredWords.length"><td colspan="5" class="muted">Chưa có từ nào trong nhóm này.</td></tr></tbody></table></div>
     </article>
+    </div>
   </section>
 </template>

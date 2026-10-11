@@ -48,6 +48,8 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
 - **Flashcard 3D:** Lật thẻ tương tác kèm phát âm Audio (sử dụng Web Speech API), phiên âm quốc tế IPA, ví dụ thực tế.
 - **AI Từ Điển Cambridge:** Nhập từ mới để AI tự động trích xuất định nghĩa chuẩn phong cách Cambridge Learner's Dictionary, cụm từ đi kèm (Collocations), và họ từ (Word family).
 - **Lưu trữ từ vựng:** Phân loại theo trạng thái (Đã nhớ / Cần ôn / Từ mới) và tự động đồng bộ vào PostgreSQL.
+- **TOEIC Vocabulary Bank:** 3.000 mục từ duy nhất, tìm kiếm Anh–Việt, lọc theo chủ đề/từ loại/CEFR, yêu thích, theo dõi mastery, ôn từ quên và quiz 10 câu.
+- **Chất lượng dữ liệu:** Trường IPA, nghĩa và ví dụ chỉ hiển thị khi có dữ liệu nguồn xác minh; ứng dụng không tự tạo nội dung giả để lấp chỗ trống.
 
 ### 3. 🧩 Tab 3: Ngữ Pháp & Cấu Trúc Toàn Diện (Grammar Master)
 - **Hệ thống chuyên đề:**
@@ -67,6 +69,7 @@ PostgreSQL trong Docker được map ra cổng `5433` để không xung đột v
   - Đánh dấu Đúng/Sai ngay lập tức.
   - AI giải thích chi tiết lý do vì sao đáp án đó đúng, phân tích bẫy ngữ pháp của các lựa chọn còn lại.
 - **Hỏi đáp tương tác (AI Tutor Chat):** Nút *"Hỏi lại AI về câu này"* mở khung hội thoại để học viên đặt câu hỏi chuyên sâu nếu chưa hiểu rõ.
+- **TOEIC Listening & Reading:** Đề đủ 200 câu/120 phút theo đúng phân bổ 7 Parts, hỗ trợ Exam/Practice Mode, lưu phiên thi, tiếp tục sau tải lại, chấm điểm ước tính và xem lại chi tiết.
 
 ---
 
@@ -110,8 +113,11 @@ learn_englist/
 ├── db/schema.sql              # Schema, indexes và bảng dữ liệu nghiệp vụ
 ├── db/seed-data.js            # Từ vựng, bài tập và dữ liệu khởi tạo
 ├── db/curriculum/             # 46 bài từ loại/ngữ pháp theo cấu trúc 13 phần
+├── db/toeic-data.js            # Đề TOEIC 200 câu, audio transcript, ảnh và passage
+├── db/toeic-vocabulary.json    # Ngân hàng 3.000 mục từ đã chuẩn hóa
 ├── scripts/migrate.js         # Tạo/cập nhật schema
 ├── scripts/seed.js            # Nạp dữ liệu khởi tạo vào PostgreSQL
+├── scripts/import-vocabulary-dataset.js # Công cụ tái tạo dữ liệu từ nguồn mở
 ├── Dockerfile                 # Multi-stage build Vue + Node runtime
 ├── docker-compose.yml         # App + PostgreSQL
 ├── .env.example               # Biến môi trường mẫu
@@ -128,8 +134,16 @@ learn_englist/
 - `GET /api/grammar`, `GET /api/practice`
 - `POST /api/practice/attempts`
 - `POST /api/dictionary`, `POST /api/tutor`
+- `GET/POST/PATCH /api/toeic/*` cho đề thi, phiên làm bài và review
+- `GET/PATCH /api/toeic/vocabulary/*` cho ngân hàng từ, bộ lọc, tiến độ và quiz
 
 Backend mặc định dùng một UUID demo. Khi thêm đăng nhập thật, gateway xác thực chỉ cần truyền user ID đã xác minh qua `x-user-id`; không tin tưởng header này trực tiếp trên Internet nếu chưa có authentication middleware.
+
+### Nguồn dữ liệu từ vựng
+
+- Danh sách/cấp độ: Oxford 3000/5000 word list.
+- Nghĩa, IPA, ví dụ và quan hệ từ: [minhqnd Dictionary](https://dict.minhqnd.com), dữ liệu CC BY-SA 4.0.
+- Các trường không có dữ liệu xác minh được để trống và giao diện thông báo rõ ràng.
 
 ---
 

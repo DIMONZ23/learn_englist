@@ -1,7 +1,11 @@
 import { pool, withTransaction } from '../server/db.js';
+import { readFileSync } from 'node:fs';
 import { config } from '../server/config.js';
 import { seedData as data } from '../db/seed-data.js';
 import { curriculumCategories } from '../db/curriculum/index.js';
+import { toeicData } from '../db/toeic-data.js';
+
+const toeicVocabulary = JSON.parse(readFileSync(new URL('../db/toeic-vocabulary.json', import.meta.url), 'utf8'));
 
 try {
   await withTransaction(async client => {
@@ -50,6 +54,46 @@ try {
          VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)
          ON CONFLICT(lesson_key) DO UPDATE SET category=EXCLUDED.category,icon=EXCLUDED.icon,title=EXCLUDED.title,level=EXCLUDED.level,content=EXCLUDED.content,sort_order=EXCLUDED.sort_order,updated_at=NOW()`,
         [id,category.category,category.icon,title,level,JSON.stringify(content),lessonOrder++]
+      );
+    }
+    await client.query(
+      `INSERT INTO toeic_tests(id,code,title,target_score,duration_minutes,description)
+       VALUES($1,$2,$3,$4,$5,$6)
+       ON CONFLICT(id) DO UPDATE SET code=EXCLUDED.code,title=EXCLUDED.title,target_score=EXCLUDED.target_score,
+       duration_minutes=EXCLUDED.duration_minutes,description=EXCLUDED.description,is_published=TRUE`,
+      [toeicData.test.id,toeicData.test.code,toeicData.test.title,toeicData.test.targetScore,toeicData.test.durationMinutes,toeicData.test.description]
+    );
+    await client.query('DELETE FROM toeic_assets WHERE test_id=$1', [toeicData.test.id]);
+    for (const item of toeicData.assets) {
+      await client.query(
+        `INSERT INTO toeic_assets(id,test_id,asset_type,title,content,translation,media_url,metadata)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
+        [item.id,toeicData.test.id,item.type,item.title,item.content,item.translation,item.mediaUrl,JSON.stringify(item.metadata)]
+      );
+    }
+    for (const q of toeicData.questions) {
+      await client.query(
+        `INSERT INTO toeic_questions(id,test_id,part,question_type,question_number,asset_id,prompt,options,correct_index,explanation,translation,difficulty,tags)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13::jsonb)
+         ON CONFLICT(id) DO UPDATE SET part=EXCLUDED.part,question_type=EXCLUDED.question_type,question_number=EXCLUDED.question_number,
+         asset_id=EXCLUDED.asset_id,prompt=EXCLUDED.prompt,options=EXCLUDED.options,correct_index=EXCLUDED.correct_index,
+         explanation=EXCLUDED.explanation,translation=EXCLUDED.translation,difficulty=EXCLUDED.difficulty,tags=EXCLUDED.tags`,
+        [q.id,toeicData.test.id,q.part,q.questionType,q.questionNumber,q.assetId,q.prompt,JSON.stringify(q.options),q.correctIndex,q.explanation,q.translation,q.difficulty,JSON.stringify(q.tags)]
+      );
+    }
+    for (const item of toeicVocabulary.entries) {
+      await client.query(
+        `INSERT INTO toeic_vocabulary(id,word,slug,ipa,part_of_speech,meaning_vi,meaning_en,topic,sub_topic,level,toeic_priority,
+          example_en,example_vi,collocations,word_family,synonyms,antonyms,common_mistakes,audio_url,tags,source)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16::jsonb,$17::jsonb,$18,$19,$20::jsonb,$21)
+         ON CONFLICT(id) DO UPDATE SET word=EXCLUDED.word,slug=EXCLUDED.slug,ipa=EXCLUDED.ipa,part_of_speech=EXCLUDED.part_of_speech,
+          meaning_vi=EXCLUDED.meaning_vi,meaning_en=EXCLUDED.meaning_en,topic=EXCLUDED.topic,sub_topic=EXCLUDED.sub_topic,
+          level=EXCLUDED.level,toeic_priority=EXCLUDED.toeic_priority,example_en=EXCLUDED.example_en,example_vi=EXCLUDED.example_vi,
+          collocations=EXCLUDED.collocations,word_family=EXCLUDED.word_family,synonyms=EXCLUDED.synonyms,antonyms=EXCLUDED.antonyms,
+          common_mistakes=EXCLUDED.common_mistakes,audio_url=EXCLUDED.audio_url,tags=EXCLUDED.tags,updated_at=NOW()`,
+        [item.id,item.word,item.slug,item.ipa,item.partOfSpeech,item.meaningVi,item.meaningEn,item.topic,item.subTopic,item.level,item.toeicPriority,
+         item.exampleEn,item.exampleVi,JSON.stringify(item.collocations),JSON.stringify(item.wordFamily),JSON.stringify(item.synonyms),JSON.stringify(item.antonyms),
+         item.commonMistakes,item.audioUrl,JSON.stringify(item.tags),'Oxford list + minhqnd Dictionary (CC BY-SA 4.0)']
       );
     }
     for (const [topic,questions] of Object.entries(data.practice)) for (let i=0;i<questions.length;i++) {

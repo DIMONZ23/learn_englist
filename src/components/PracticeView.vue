@@ -2,7 +2,9 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { api } from '../api.js';
 import { showToast, state } from '../store.js';
+import ToeicModule from './ToeicModule.vue';
 
+const labMode = ref('quick');
 const selectedIndex = ref(null);
 const result = ref(null);
 const correctCount = ref(0);
@@ -90,6 +92,9 @@ async function sendMessage() {
 
 <template>
   <section class="view active">
+    <div class="practice-mode-switch"><button :class="{active:labMode==='quick'}" @click="labMode='quick'">⚡ Luyện tập nhanh</button><button :class="{active:labMode==='toeic'}" @click="labMode='toeic'">🎧 TOEIC Listening & Reading</button></div>
+    <ToeicModule v-if="labMode==='toeic'" @back="labMode='quick'" />
+    <div v-else>
     <div class="practice-hero card"><div><span class="pill pill-cyan">Practice Lab</span><h2>Luyện đúng điểm yếu,<br>tiến bộ đúng trọng tâm.</h2><p>Chọn chủ đề, làm bài và nhận giải thích chi tiết ngay lập tức.</p></div><div class="score-orbit"><span>🏆</span><strong>{{ state.dashboard.bestScore }}</strong><small>điểm cao nhất</small></div></div>
     <div class="topic-chips"><button v-for="topic in topics" :key="topic" class="topic-chip" :class="{ active: topic === state.practiceTopic }" @click="chooseTopic(topic)">{{ topic }}</button></div>
     <div class="practice-layout">
@@ -103,6 +108,7 @@ async function sendMessage() {
         <div ref="chatBox" class="chat-messages"><div v-for="(message, index) in messages" :key="index" class="message" :class="message.role">{{ message.text }}</div><div v-if="tutorThinking" class="message ai typing">Lio đang suy nghĩ...</div></div>
         <form class="chat-input" @submit.prevent="sendMessage"><input v-model="chatInput" placeholder="Ví dụ: Vì sao không dùng ‘went’?"><button type="submit" aria-label="Gửi câu hỏi">↑</button></form>
       </aside>
+    </div>
     </div>
   </section>
 </template>
